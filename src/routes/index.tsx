@@ -149,7 +149,7 @@ function Dashboard() {
   );
 }
 
-function Stat({ label, v, u, sub, warn }: { label: string; v?: number | string; u: string; sub?: string; warn?: boolean }) {
+function Stat({ label, v, u, sub, warn }: { label: string; v?: number | string | undefined; u: string; sub?: string | undefined; warn?: boolean | undefined }) {
   return (
     <div className={`hud-card ${warn ? "border-warning" : ""}`}>
       <div className="hud-label">{label}</div>
