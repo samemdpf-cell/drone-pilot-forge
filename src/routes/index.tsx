@@ -114,6 +114,15 @@ function Dashboard() {
   const kpMax = kpF.data?.length ? Math.max(...kpF.data.map((x) => x.kp)) : undefined;
   const gpsQ = !pos ? 0 : pos.acc <= 5 ? 4 : pos.acc <= 15 ? 3 : pos.acc <= 50 ? 2 : 1;
   const sats = !pos ? 0 : Math.max(4, Math.round(22 - Math.log2(pos.acc + 1) * 2.5));
+  const isSearched = !!place;
+  // Estimativa para o local buscado: constelação visível conforme a latitude, reduzida por nuvens e tempestade geomagnética (KP)
+  const baseSats = src ? 12 - (Math.abs(src.lat) > 55 ? 3 : Math.abs(src.lat) > 35 ? 1 : 0) : 10;
+  const cloudAdj = c?.cloud_cover != null ? (c.cloud_cover > 80 ? 2 : c.cloud_cover > 50 ? 1 : 0) : 0;
+  const kpAdj = (kpNow ?? 0) >= 8 ? 3 : (kpNow ?? 0) >= 5 ? 2 : 0;
+  const estSats = Math.max(3, baseSats - cloudAdj - kpAdj);
+  const estQ = estSats >= 9 ? 4 : estSats >= 7 ? 3 : estSats >= 5 ? 2 : 1;
+  const shownQ = isSearched ? estQ : gpsQ;
+  const shownSats = isSearched ? estSats : sats;
   const fmtT = (s?: string) => (s ? new Date(s).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : "--");
 
   const gust = c?.wind_gusts_10m ?? 0, wind = c?.wind_speed_10m ?? 0;
@@ -130,7 +139,11 @@ function Dashboard() {
       <main className="mx-auto max-w-6xl px-4 py-6 space-y-4">
         <div className="hud-card space-y-2">
           <div className="hud-label">Local</div>
-          <div className="text-xl font-bold text-primary">{locName ?? (err ? `GPS: ${err}` : "Obtendo posição…")}</div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="text-xl font-bold text-primary">{locName ?? (err ? `GPS: ${err}` : "Obtendo posição…")}</div>
+            {locName && <span className={`rounded-full border px-2 py-0.5 text-xs font-medium ${isSearched ? "border-primary text-primary" : "border-success text-success"}`}>{isSearched ? "Local buscado" : "GPS do aparelho"}</span>}
+          </div>
+          {locName && <div className="text-xs text-muted-foreground">Todos os dados abaixo se referem a este local.</div>}
           <form onSubmit={onSearch} className="flex flex-wrap gap-2">
             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Cidade ou CEP (ex: Campinas ou 01310-100)" className="flex-1 min-w-48 rounded-md border border-input bg-background px-3 py-2 text-sm" />
             <button disabled={busy} className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">{busy ? "Buscando…" : "Buscar"}</button>
@@ -145,7 +158,7 @@ function Dashboard() {
             {issues.length > 0 && <div className="text-sm text-muted-foreground">{issues.join(" · ")}</div>}
             {issues.length === 0 && c && <div className="text-sm text-muted-foreground">Todos os parâmetros dentro do limite</div>}
           </div>
-          <div className="font-mono text-sm text-muted-foreground">{err ? `GPS: ${err}` : pos ? `Aparelho: ${pos.lat.toFixed(5)}, ${pos.lon.toFixed(5)}` : "Obtendo posição…"}</div>
+          <div className="font-mono text-sm text-muted-foreground">{locName ? `Exibindo: ${locName}` : err ? `GPS: ${err}` : "Obtendo posição…"}</div>
         </div>
 
         <h2 className="hud-label pt-2">Clima</h2>
@@ -168,16 +181,16 @@ function Dashboard() {
         <h2 className="hud-label pt-2">GPS & clima espacial</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <div className="hud-card">
-            <div className="hud-label">Sinal GPS</div>
+            <div className="hud-label">Sinal GPS{isSearched ? " (local)" : ""}</div>
             <div className="flex items-end gap-1 h-10 mt-2">
-              {[1, 2, 3, 4].map((i) => <div key={i} className={`w-3 rounded-sm ${i <= gpsQ ? "bg-primary" : "bg-muted"}`} style={{ height: `${i * 25}%` }} />)}
+              {[1, 2, 3, 4].map((i) => <div key={i} className={`w-3 rounded-sm ${i <= shownQ ? "bg-primary" : "bg-muted"}`} style={{ height: `${i * 25}%` }} />)}
             </div>
-            <div className="text-xs text-muted-foreground mt-1">Precisão ±{pos ? pos.acc.toFixed(0) : "--"} m</div>
+            <div className="text-xs text-muted-foreground mt-1">{isSearched ? "Estimativa para o local buscado" : `Precisão ±${pos ? pos.acc.toFixed(0) : "--"} m`}</div>
           </div>
           <Stat label="Latitude" v={src ? src.lat.toFixed(4) : undefined} u="°" sub={place ? "Do local buscado" : "GPS do aparelho"} />
           <Stat label="Longitude" v={src ? src.lon.toFixed(4) : undefined} u="°" sub={place ? "Do local buscado" : "GPS do aparelho"} />
-          <Stat label="Satélites (estimado)" v={pos ? sats : undefined} u="" sub="baseado na precisão" />
-          <Stat label="Altitude GPS" v={pos?.alt != null ? pos.alt.toFixed(0) : undefined} u="m" sub={pos?.speed != null ? `Vel. ${(pos.speed * 3.6).toFixed(1)} km/h` : undefined} />
+          <Stat label="Satélites (estimado)" v={src ? shownSats : undefined} u="" sub={isSearched ? "Estimativa para o local: latitude, nuvens e KP" : "baseado na precisão do aparelho"} />
+          <Stat label="Altitude GPS" v={isSearched ? undefined : pos?.alt != null ? pos.alt.toFixed(0) : undefined} u="m" sub={isSearched ? "Só disponível pelo GPS do aparelho" : pos?.speed != null ? `Vel. ${(pos.speed * 3.6).toFixed(1)} km/h` : undefined} />
           <Stat label="Índice KP atual" v={kpNow?.toFixed(1)} u="" warn={(kpNow ?? 0) >= 5} sub={(kpNow ?? 0) >= 5 ? "Tempestade geomagnética" : "Estável"} />
         </div>
 
