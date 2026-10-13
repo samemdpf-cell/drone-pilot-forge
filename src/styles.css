@@ -58,9 +58,13 @@
   --input: oklch(0.32 0.03 240);
   --ring: oklch(0.85 0.17 150);
   --grid: oklch(0.85 0.17 150 / 6%);
+  --airspace-prohibited: #e54c51;
+  --airspace-restricted: #e7b53c;
+  --airspace-danger: #48afd0;
 }
 
 @layer base {
+  .airspace-info { color: var(--background); font-family: var(--font-sans); max-width: 260px; line-height: 1.5; }
   * { border-color: var(--color-border); }
   body {
     background-color: var(--color-background);

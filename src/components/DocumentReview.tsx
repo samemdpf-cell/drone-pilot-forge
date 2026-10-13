@@ -7,8 +7,8 @@ import { lovable } from "@/integrations/lovable";
 import { analyzeDocument } from "@/lib/document-analysis.functions";
 import { compareDocuments, type ReviewedDocument } from "@/lib/document-review";
 
-type InputDoc = { id: string; name: string; data: string; type: string };
-export function DocumentReview({ docs }: { docs: InputDoc[] }) {
+type InputDoc = { id: string; name: string; type: string; expires?: string | null };
+export function DocumentReview({ docs, loadData, onExpiry }: { docs: InputDoc[]; loadData: (id: string) => Promise<string>; onExpiry: (id: string, expiry: string) => Promise<void> }) {
   const analyze = useServerFn(analyzeDocument);
   const [signedIn, setSignedIn] = useState(false);
   const [email, setEmail] = useState(""); const [password, setPassword] = useState("");
@@ -34,9 +34,9 @@ export function DocumentReview({ docs }: { docs: InputDoc[] }) {
     try {
       for (const [i, doc] of docs.entries()) {
         setMessage(`Lendo ${i + 1}/${docs.length}: ${doc.name}`);
-        const result = await analyze({ data: doc });
+        const result = await analyze({ data: { id: doc.id, name: doc.name, type: doc.type, data: await loadData(doc.id) } });
         if (!result.ok) { setMessage(`${doc.name}: ${result.error} Nenhuma comparação concluída.`); return; }
-        rows.push({ id: doc.id, name: doc.name, extraction: result.extraction });
+        rows.push({ id: doc.id, name: doc.name, expires: doc.expires ?? null, extraction: result.extraction });
       }
       setReviewed(rows); setMessage(`${rows.length} documentos comparados nas pastas Piloto e Drone.`);
     } catch { setMessage("A comparação foi interrompida. Seus documentos não foram alterados."); }
@@ -46,7 +46,7 @@ export function DocumentReview({ docs }: { docs: InputDoc[] }) {
   return <section className="border-y border-border py-4 space-y-3" aria-label="Conferência de documentos">
     <h1 className="font-bold text-xl flex gap-2 items-center"><ScanSearch className="size-5 text-primary" />Conferência de documentos</h1>
     {!signedIn ? <div className="space-y-2">
-      <p className="text-sm text-muted-foreground">Entre para comparar seus documentos com IA.</p>
+      <p className="text-sm text-muted-foreground">Entre para acessar seus documentos e comparar com IA.</p>
       <form onSubmit={(e) => { e.preventDefault(); void login(false); }} className="grid gap-2 sm:grid-cols-2">
         <input aria-label="E-mail" type="email" required autoComplete="email" placeholder="E-mail" value={email} onChange={(e) => setEmail(e.target.value)} className="min-w-0 rounded-md border border-input bg-background p-2" />
         <input aria-label="Senha" type="password" minLength={8} required autoComplete="current-password" placeholder="Senha" value={password} onChange={(e) => setPassword(e.target.value)} className="min-w-0 rounded-md border border-input bg-background p-2" />
@@ -62,6 +62,6 @@ export function DocumentReview({ docs }: { docs: InputDoc[] }) {
       <ul className="text-xs text-muted-foreground space-y-1 break-words">{a.documents.map((v, i) => <li key={i}>{v}</li>)}</ul>
       <Button size="sm" variant="outline" disabled={confirmed.includes(a.id)} onClick={() => setConfirmed((old) => [...old, a.id])}>{confirmed.includes(a.id) ? "Conferido manualmente" : "Confirmar conferência manual"}</Button>
     </article>)}
-    {reviewed.map((d) => <div key={d.id} className="border-t border-border pt-2 text-xs break-words"><strong>{d.name}</strong><div>Piloto: {d.extraction.pilotName ?? "Não identificado"}</div><div>Registros: {d.extraction.registrations.map((r) => `${r.type}: ${r.value}`).join(" · ") || "Não identificados"}</div>{d.extraction.note && <div className="text-muted-foreground">{d.extraction.note}</div>}</div>)}
+    {reviewed.map((d) => <div key={d.id} className="border-t border-border pt-2 text-xs break-words"><strong>{d.name}</strong><div>Piloto: {d.extraction.pilotName ?? "Não identificado"}</div><div>Registros: {d.extraction.registrations.map((r) => `${r.type}: ${r.value}`).join(" · ") || "Não identificados"}</div><div>Validade lida: {d.extraction.expiryDate ?? 'Não identificada'} · Informada: {d.expires ?? 'Não informada'}</div>{d.extraction.expiryDate && <Button variant="outline" size="sm" className="mt-2" onClick={async () => { if (!d.extraction.expiryDate) return; try { await onExpiry(d.id, d.extraction.expiryDate); setMessage('Validade confirmada e salva na sua conta.'); } catch { setMessage('Não foi possível salvar a validade.'); } }}>Confirmar e salvar validade lida</Button>}{d.extraction.note && <div className="text-muted-foreground">{d.extraction.note}</div>}</div>)}
   </section>;
 }

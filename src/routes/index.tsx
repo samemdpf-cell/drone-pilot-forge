@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Nav } from "@/components/Nav";
 import { Button } from "@/components/ui/button";
 import { FlightChecklist } from "@/components/FlightChecklist";
+import { AirspaceMap } from "@/components/AirspaceMap";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -291,6 +292,7 @@ function Dashboard() {
         <div className="text-xs text-muted-foreground">{clim.isLoading ? "Calculando climatologia…" : "Médias dos últimos 5 anos para este mês."}</div>
 
         <h2 className="hud-label pt-2">Espaço aéreo</h2>
+        <AirspaceMap location={src} name={locName} />
         <div className="hud-card space-y-2 text-sm">
           <div>Antes de voar, consulte as restrições oficiais do DECEA para {locName ?? "o local"} ({src ? `${src.lat.toFixed(4)}, ${src.lon.toFixed(4)}` : "--"}).</div>
           <ul className="list-disc pl-5 text-muted-foreground space-y-1">
