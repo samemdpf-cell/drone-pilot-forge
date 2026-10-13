@@ -1,3 +1,4 @@
-- [ ] Review mobile header, weather and GPS cards; verify layout and installation controls.
-- [ ] Compare pilot names and registration numbers across uploaded documents using AI Gateway, with manual-confirmation alerts in Documents.
-- [ ] Add a preflight checklist alongside relative humidity, wind gusts and visibility.
+- [x] Review mobile header, weather and GPS cards; verify layout and installation controls.
+- [x] Implement pilot-name and registration comparison through AI Gateway with manual-confirmation alerts in Documents; extraction verified with a fictitious image and comparison rules tested.
+- [ ] Verify comparison end-to-end with an authenticated account and uploaded documents. Blocker: no auth users exist; user must sign up and confirm their email or sign in with Google.
+- [x] Add and verify a preflight checklist alongside relative humidity, wind gusts and visibility.
