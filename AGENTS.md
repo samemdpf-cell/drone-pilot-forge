@@ -10,3 +10,5 @@
 <!-- LOVABLE:END -->
 
 - Keep the mobile navigation in two grid rows and allow metric units to wrap independently of values so installation controls and GPS coordinates remain readable on narrow screens.
+- Run document extraction in an authenticated server function through AI Gateway; keep deterministic cross-document comparison in a shared pure module so alerts remain testable and manually reviewable.
+- Reset the session-only preflight checklist when the displayed location changes so checks do not carry over to another flight location.

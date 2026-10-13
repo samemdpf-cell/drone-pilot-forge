@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Nav } from "@/components/Nav";
 import { Button } from "@/components/ui/button";
+import { FlightChecklist } from "@/components/FlightChecklist";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -78,7 +79,8 @@ function Dashboard() {
     queryKey: ["rev", pos?.lat.toFixed(2), pos?.lon.toFixed(2)],
     enabled: !!pos && !place,
     queryFn: async () => {
-      const r = await (await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos!.lat}&lon=${pos!.lon}&zoom=10&accept-language=pt-BR`)).json();
+      if (!pos) return null;
+      const r = await (await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.lat}&lon=${pos.lon}&zoom=10&accept-language=pt-BR`)).json();
       const a = r.address ?? {};
       return [a.city ?? a.town ?? a.village ?? a.municipality, a.state].filter(Boolean).join(" - ") || null;
     },
@@ -202,6 +204,7 @@ function Dashboard() {
           </div>
         </div>
 
+        <FlightChecklist location={locName} />
         <h2 className="hud-label pt-2">GPS & clima espacial</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <div className="hud-card">
