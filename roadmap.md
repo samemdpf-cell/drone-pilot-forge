@@ -2,3 +2,4 @@
 - [x] Implement pilot-name and registration comparison through AI Gateway with manual-confirmation alerts in Documents; extraction verified with a fictitious image and comparison rules tested.
 - [x] Verify comparison end-to-end with an authenticated account and uploaded documents: signed up a test account, uploaded two documents and confirmed both divergence alerts in the browser.
 - [x] Add and verify a preflight checklist alongside relative humidity, wind gusts and visibility.
+- [ ] Add a location-linked restriction map with verified airspace sources and explicit coverage limits.
