@@ -11,7 +11,7 @@ export const Route = createFileRoute("/")({
       { title: "Checklist Pilotos Profissional — Painel de voo para pilotos de drone" },
 
       { name: "description", content: "Clima, ventos, rajadas, índice KP, GPS, satélites, aurora e nascer/pôr do sol para pilotos de drone." },
-      { property: "og:title", content: "SkyPilot — Painel de voo" },
+      { property: "og:title", content: "Checklist Pilotos Profissional — Painel de voo" },
       { property: "og:description", content: "Condições de voo em tempo real para pilotos de drone." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
