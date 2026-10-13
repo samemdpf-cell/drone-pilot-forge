@@ -95,8 +95,26 @@ function Dashboard() {
     enabled: !!lat,
     refetchInterval: 600_000,
     queryFn: async () => {
-      const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,precipitation,weather_code,wind_speed_10m,wind_gusts_10m,wind_direction_10m,visibility,cloud_cover&daily=sunrise,sunset,precipitation_probability_max&timezone=auto&wind_speed_unit=kmh`);
+      const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,precipitation,weather_code,wind_speed_10m,wind_gusts_10m,wind_direction_10m,visibility,cloud_cover&hourly=wind_speed_10m,wind_direction_10m,wind_gusts_10m,visibility,wind_speed_80m,wind_speed_120m,wind_speed_180m,wind_direction_120m&forecast_hours=24&daily=sunrise,sunset,precipitation_probability_max&timezone=auto&wind_speed_unit=kmh`);
       return r.json();
+    },
+  });
+  const aq = useQuery({
+    queryKey: ["aq", lat, lon], enabled: !!lat, refetchInterval: 1_800_000,
+    queryFn: async () => (await (await fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=us_aqi,pm2_5,pm10,ozone,carbon_monoxide`)).json()).current,
+  });
+  const clim = useQuery({
+    queryKey: ["clim", lat, lon], enabled: !!lat, staleTime: Infinity,
+    queryFn: async () => {
+      const end = new Date(Date.now() - 7 * 864e5), start = new Date(end); start.setFullYear(end.getFullYear() - 5);
+      const f = (x: Date) => x.toISOString().slice(0, 10);
+      const j = await (await fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${f(start)}&end_date=${f(end)}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max,wind_gusts_10m_max&timezone=auto`)).json();
+      const m = new Date().getMonth(), idx: number[] = [];
+      (j.daily?.time ?? []).forEach((t: string, i: number) => { if (new Date(t + "T12:00").getMonth() === m) idx.push(i); });
+      const avg = (k: string) => { const v = idx.map((i) => j.daily[k][i]).filter((x: number | null) => x != null); return v.length ? v.reduce((a: number, b: number) => a + b, 0) / v.length : undefined; };
+      const rainDays = idx.filter((i) => (j.daily.precipitation_sum[i] ?? 0) >= 1).length;
+      const years = new Set(idx.map((i) => j.daily.time[i].slice(0, 4))).size || 1;
+      return { tmax: avg("temperature_2m_max"), tmin: avg("temperature_2m_min"), rain: (avg("precipitation_sum") ?? 0) * 30, rainDays: Math.round(rainDays / years), wind: avg("wind_speed_10m_max"), gust: avg("wind_gusts_10m_max") };
     },
   });
   const kp = useQuery({
@@ -110,6 +128,11 @@ function Dashboard() {
 
   const c = wx.data?.current;
   const d = wx.data?.daily;
+  const h = wx.data?.hourly;
+  const dirName = (g?: number) => (g == null ? "--" : dirs[Math.round(g / 45) % 8]);
+  const aqi = aq.data?.us_aqi as number | undefined;
+  const aqiTxt = aqi == null ? "" : aqi <= 50 ? "Boa" : aqi <= 100 ? "Moderada" : aqi <= 150 ? "Ruim p/ sensíveis" : aqi <= 200 ? "Ruim" : "Muito ruim";
+  const monthName = new Date().toLocaleDateString("pt-BR", { month: "long" });
   const kpNow = kp.data?.at(-1)?.kp;
   const kpMax = kpF.data?.length ? Math.max(...kpF.data.map((x) => x.kp)) : undefined;
   const gpsQ = !pos ? 0 : pos.acc <= 5 ? 4 : pos.acc <= 15 ? 3 : pos.acc <= 50 ? 2 : 1;
@@ -208,6 +231,72 @@ function Dashboard() {
             {kpF.data?.slice(-24).map((x, i) => (
               <div key={i} title={`${x.time}: ${x.kp}`} className={`flex-1 rounded-t-sm ${x.kp >= 8 ? "bg-destructive" : x.kp >= 5 ? "bg-warning" : "bg-primary"}`} style={{ height: `${(x.kp / 9) * 100}%` }} />
             ))}
+          </div>
+        </div>
+
+        <h2 className="hud-label pt-2">Vento: direção, velocidade e altitude</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="hud-card flex flex-col items-center">
+            <div className="hud-label self-start">Direção do vento</div>
+            <div className="relative h-20 w-20 rounded-full border border-border mt-2">
+              <div className="absolute inset-0 flex items-start justify-center text-[10px] text-muted-foreground">N</div>
+              <div className="absolute inset-0 flex items-center justify-center text-2xl text-primary" style={{ transform: `rotate(${(c?.wind_direction_10m ?? 0) + 180}deg)` }}>↑</div>
+            </div>
+            <div className="font-mono text-sm mt-1">{dirName(c?.wind_direction_10m)} {c?.wind_direction_10m ?? "--"}°</div>
+          </div>
+          <Stat label="Velocidade (10 m)" v={c?.wind_speed_10m} u="km/h" warn={wind > 30} sub={`Rajadas ${c?.wind_gusts_10m ?? "--"} km/h`} />
+          <Stat label="Vento a 80 m" v={h?.wind_speed_80m?.[0]} u="km/h" warn={(h?.wind_speed_80m?.[0] ?? 0) > 30} />
+          <Stat label="Vento a 120 m" v={h?.wind_speed_120m?.[0]} u="km/h" warn={(h?.wind_speed_120m?.[0] ?? 0) > 30} sub={`Direção ${dirName(h?.wind_direction_120m?.[0])} · 180 m: ${h?.wind_speed_180m?.[0] ?? "--"} km/h`} />
+        </div>
+
+        <div className="hud-card overflow-x-auto">
+          <div className="hud-label mb-2">Previsão de ventos e visibilidade · próximas 24 h</div>
+          <table className="w-full font-mono text-xs">
+            <thead className="text-muted-foreground"><tr><th className="text-left p-1">Hora</th><th className="p-1">Dir.</th><th className="p-1">10 m</th><th className="p-1">Rajada</th><th className="p-1">120 m</th><th className="p-1">Visib.</th></tr></thead>
+            <tbody>
+              {h?.time?.filter((_: string, i: number) => i % 2 === 0).map((t: string, k: number) => { const i = k * 2; const g = h.wind_gusts_10m[i]; return (
+                <tr key={t} className="border-t border-border text-center">
+                  <td className="text-left p-1">{fmtT(t)}</td>
+                  <td className="p-1"><span className="inline-block text-primary" style={{ transform: `rotate(${h.wind_direction_10m[i] + 180}deg)` }}>↑</span> {dirName(h.wind_direction_10m[i])}</td>
+                  <td className={`p-1 ${h.wind_speed_10m[i] > 30 ? "text-warning" : ""}`}>{h.wind_speed_10m[i]}</td>
+                  <td className={`p-1 ${g > 38 ? "text-warning" : ""}`}>{g}</td>
+                  <td className="p-1">{h.wind_speed_120m[i]}</td>
+                  <td className={`p-1 ${h.visibility[i] < 3000 ? "text-warning" : ""}`}>{(h.visibility[i] / 1000).toFixed(1)} km</td>
+                </tr>); })}
+            </tbody>
+          </table>
+          <div className="text-xs text-muted-foreground mt-1">Velocidades em km/h.</div>
+        </div>
+
+        <h2 className="hud-label pt-2">Qualidade do ar</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <Stat label="Índice (AQI)" v={aqi} u="" sub={aqiTxt} warn={(aqi ?? 0) > 100} />
+          <Stat label="PM2.5" v={aq.data?.pm2_5} u="µg/m³" />
+          <Stat label="PM10" v={aq.data?.pm10} u="µg/m³" />
+          <Stat label="Ozônio" v={aq.data?.ozone} u="µg/m³" />
+        </div>
+
+        <h2 className="hud-label pt-2">Climatologia do local · {monthName}</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <Stat label="Máx. média" v={clim.data?.tmax?.toFixed(1)} u="°C" sub={`Mín. média ${clim.data?.tmin?.toFixed(1) ?? "--"} °C`} />
+          <Stat label="Chuva no mês" v={clim.data?.rain.toFixed(0)} u="mm" sub={`~${clim.data?.rainDays ?? "--"} dias com chuva`} />
+          <Stat label="Vento máx. médio" v={clim.data?.wind?.toFixed(0)} u="km/h" />
+          <Stat label="Rajada máx. média" v={clim.data?.gust?.toFixed(0)} u="km/h" />
+        </div>
+        <div className="text-xs text-muted-foreground">{clim.isLoading ? "Calculando climatologia…" : "Médias dos últimos 5 anos para este mês."}</div>
+
+        <h2 className="hud-label pt-2">Espaço aéreo</h2>
+        <div className="hud-card space-y-2 text-sm">
+          <div>Antes de voar, consulte as restrições oficiais do DECEA para {locName ?? "o local"} ({src ? `${src.lat.toFixed(4)}, ${src.lon.toFixed(4)}` : "--"}).</div>
+          <ul className="list-disc pl-5 text-muted-foreground space-y-1">
+            <li>Altura máxima padrão: 120 m (400 ft) acima do solo.</li>
+            <li>Distância de aeródromos e helipontos conforme ICA 100-40 / zonas de aproximação.</li>
+            <li>Voo em linha de visada (VLOS) e afastado de pessoas não envolvidas.</li>
+          </ul>
+          <div className="flex flex-wrap gap-2 pt-1">
+            <a href="https://sarpas.decea.mil.br" target="_blank" rel="noreferrer" className="rounded-md bg-primary px-3 py-1.5 text-primary-foreground">SARPAS (solicitar voo)</a>
+            <a href="https://aisweb.decea.mil.br" target="_blank" rel="noreferrer" className="rounded-md border border-input px-3 py-1.5">AISWEB / NOTAM</a>
+            {src && <a href={`https://www.openaip.net/map#10/${src.lat}/${src.lon}`} target="_blank" rel="noreferrer" className="rounded-md border border-input px-3 py-1.5">Mapa do espaço aéreo</a>}
           </div>
         </div>
         <p className="text-xs text-muted-foreground">Dados: Open-Meteo e NOAA SWPC. Atualização automática.</p>
