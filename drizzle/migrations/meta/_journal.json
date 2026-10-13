@@ -1,5 +1,13 @@
 {
   "version": "7",
   "dialect": "postgresql",
-  "entries": []
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1791912100369,
+      "tag": "0000_private_account_documents",
+      "breakpoints": true
+    }
+  ]
 }
