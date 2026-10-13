@@ -1,3 +1,5 @@
+/// <reference types="google.maps" />
+
 let loading: Promise<typeof google.maps> | undefined;
 
 declare global {
