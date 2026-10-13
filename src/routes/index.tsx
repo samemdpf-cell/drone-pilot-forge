@@ -174,6 +174,8 @@ function Dashboard() {
             </div>
             <div className="text-xs text-muted-foreground mt-1">Precisão ±{pos ? pos.acc.toFixed(0) : "--"} m</div>
           </div>
+          <Stat label="Latitude" v={src ? src.lat.toFixed(4) : undefined} u="°" sub={place ? "Do local buscado" : "GPS do aparelho"} />
+          <Stat label="Longitude" v={src ? src.lon.toFixed(4) : undefined} u="°" sub={place ? "Do local buscado" : "GPS do aparelho"} />
           <Stat label="Satélites (estimado)" v={pos ? sats : undefined} u="" sub="baseado na precisão" />
           <Stat label="Altitude GPS" v={pos?.alt != null ? pos.alt.toFixed(0) : undefined} u="m" sub={pos?.speed != null ? `Vel. ${(pos.speed * 3.6).toFixed(1)} km/h` : undefined} />
           <Stat label="Índice KP atual" v={kpNow?.toFixed(1)} u="" warn={(kpNow ?? 0) >= 5} sub={(kpNow ?? 0) >= 5 ? "Tempestade geomagnética" : "Estável"} />
