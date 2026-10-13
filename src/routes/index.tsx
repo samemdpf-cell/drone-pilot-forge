@@ -38,7 +38,7 @@ function parseKp(rows: unknown): { time: string; kp: number }[] {
   if (!Array.isArray(rows)) return [];
   return rows.flatMap((r) => {
     if (Array.isArray(r)) { const kp = Number(r[1]); return isNaN(kp) ? [] : [{ time: String(r[0]), kp }]; }
-    if (r && typeof r === "object") { const o = r as Record<string, unknown>; const kp = Number(o.Kp ?? o.kp ?? o.kp_index); return isNaN(kp) ? [] : [{ time: String(o.time_tag), kp }]; }
+    if (r && typeof r === "object") { const o = r as Record<string, unknown>; const kp = Number(o["Kp"] ?? o["kp"] ?? o["kp_index"]); return isNaN(kp) ? [] : [{ time: String(o["time_tag"]), kp }]; }
     return [];
   });
 }

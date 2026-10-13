@@ -16,7 +16,7 @@ export const Route = createFileRoute("/documentos")({
   component: Docs,
 });
 
-type Doc = { id: string; folder: "piloto" | "drone"; name: string; type: string; data: string; expires?: string; added: string };
+type Doc = { id: string; folder: "piloto" | "drone"; name: string; type: string; data: string; expires?: string | undefined; added: string };
 const KEY = "skypilot-docs";
 
 function Docs() {
