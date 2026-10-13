@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import logo from "@/assets/logo.jpeg.asset.json";
+import { Button } from "@/components/ui/button";
 
 type InstallPromptEvent = Event & {
   prompt: () => Promise<void>;
@@ -49,29 +50,28 @@ export function Nav() {
     }
   };
 
-  const cls = "px-3 py-1.5 rounded-md text-sm text-muted-foreground hover:text-foreground";
-  const active = { className: "px-3 py-1.5 rounded-md text-sm bg-secondary text-primary" };
+  const cls = "flex min-h-11 items-center justify-center px-3 py-1.5 rounded-md text-sm text-muted-foreground hover:text-foreground";
+  const active = { className: `${cls} bg-secondary text-primary` };
 
   return (
     <header className="border-b border-border bg-background/80 backdrop-blur sticky top-0 z-10">
-      <div className="mx-auto max-w-6xl flex items-center justify-between px-4 py-3">
-        <Link to="/" className="flex items-center gap-3 font-mono font-bold text-primary tracking-widest">
-          <img src={logo.url} alt="Logomarca" className="h-10 w-auto rounded" />
-          <span className="hidden min-[420px]:inline">SKYPILOT</span>
+      <div className="mx-auto grid max-w-6xl grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 px-4 py-2 sm:flex sm:justify-between sm:py-3">
+        <Link to="/" className="flex min-w-0 items-center gap-2 font-mono font-bold text-primary">
+          <img src={logo.url} alt="Anselmo Imagens Aéreas" className="h-10 w-auto shrink-0 rounded" />
+          <span className="truncate text-sm sm:text-base">SKYPILOT</span>
         </Link>
-        <div className="flex items-center gap-2">
-          <nav className="flex gap-1">
+          <nav aria-label="Navegação principal" className="col-span-2 row-start-2 grid grid-cols-2 gap-1 sm:ml-auto sm:flex">
             <Link to="/" className={cls} activeProps={active} activeOptions={{ exact: true }}>Painel</Link>
             <Link to="/documentos" className={cls} activeProps={active}>Documentos</Link>
           </nav>
           {showInstall && (
-            <div className="relative">
-              <button
+            <div className="relative col-start-2 row-start-1 shrink-0">
+              <Button
                 onClick={handleInstall}
-                className="px-3 py-1.5 rounded-md text-sm bg-primary text-primary-foreground font-medium hover:opacity-90"
+                className="h-11 px-3"
               >
                 Instalar app
-              </button>
+              </Button>
               {iosHint && (
                 <div className="absolute right-0 top-full mt-2 w-56 rounded-md border border-border bg-card p-3 text-xs text-muted-foreground shadow-lg z-20">
                   No iPhone: toque no botão <strong className="text-foreground">Compartilhar</strong> e depois em{" "}
@@ -80,7 +80,6 @@ export function Nav() {
               )}
             </div>
           )}
-        </div>
       </div>
     </header>
   );
