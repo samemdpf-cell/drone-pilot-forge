@@ -45,9 +45,50 @@ function parseKp(rows: unknown): { time: string; kp: number }[] {
 
 const dirs = ["N", "NE", "L", "SE", "S", "SO", "O", "NO"];
 
+type Place = { lat: number; lon: number; name: string };
+
+async function searchPlace(q: string): Promise<Place> {
+  const cep = q.replace(/\D/g, "");
+  let query = q.trim();
+  if (/^\d{8}$/.test(cep)) {
+    const v = await (await fetch(`https://viacep.com.br/ws/${cep}/json/`)).json();
+    if (v.erro) throw new Error("CEP não encontrado");
+    query = v.localidade;
+    const g = await (await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=10&language=pt&countryCode=BR`)).json();
+    const hit = g.results?.find((r: { admin1?: string }) => r.admin1 && v.estado && r.admin1 === v.estado) ?? g.results?.[0];
+    if (!hit) throw new Error("Cidade do CEP não encontrada");
+    return { lat: hit.latitude, lon: hit.longitude, name: `${v.localidade} - ${v.uf} (CEP ${v.cep})` };
+  }
+  const g = await (await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=1&language=pt`)).json();
+  const hit = g.results?.[0];
+  if (!hit) throw new Error("Cidade não encontrada");
+  return { lat: hit.latitude, lon: hit.longitude, name: [hit.name, hit.admin1, hit.country].filter(Boolean).join(", ") };
+}
+
 function Dashboard() {
   const { pos, err } = useGps();
-  const lat = pos ? pos.lat.toFixed(2) : null, lon = pos ? pos.lon.toFixed(2) : null;
+  const [place, setPlace] = useState<Place | null>(null);
+  const [q, setQ] = useState("");
+  const [searchErr, setSearchErr] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const src = place ?? (pos ? { lat: pos.lat, lon: pos.lon } : null);
+  const lat = src ? src.lat.toFixed(2) : null, lon = src ? src.lon.toFixed(2) : null;
+  const gpsCity = useQuery({
+    queryKey: ["rev", pos?.lat.toFixed(2), pos?.lon.toFixed(2)],
+    enabled: !!pos && !place,
+    queryFn: async () => {
+      const r = await (await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos!.lat}&lon=${pos!.lon}&zoom=10&accept-language=pt-BR`)).json();
+      const a = r.address ?? {};
+      return [a.city ?? a.town ?? a.village ?? a.municipality, a.state].filter(Boolean).join(" - ") || null;
+    },
+  });
+  const onSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!q.trim()) return;
+    setBusy(true); setSearchErr(null);
+    try { setPlace(await searchPlace(q)); } catch (x) { setSearchErr((x as Error).message); } finally { setBusy(false); }
+  };
+  const locName = place ? place.name : gpsCity.data ? `${gpsCity.data} (GPS)` : pos ? "Sua posição (GPS)" : null;
 
   const wx = useQuery({
     queryKey: ["wx", lat, lon],
@@ -87,6 +128,16 @@ function Dashboard() {
     <div className="min-h-screen">
       <Nav />
       <main className="mx-auto max-w-6xl px-4 py-6 space-y-4">
+        <div className="hud-card space-y-2">
+          <div className="hud-label">Local</div>
+          <div className="text-xl font-bold text-primary">{locName ?? (err ? `GPS: ${err}` : "Obtendo posição…")}</div>
+          <form onSubmit={onSearch} className="flex flex-wrap gap-2">
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Cidade ou CEP (ex: Campinas ou 01310-100)" className="flex-1 min-w-48 rounded-md border border-input bg-background px-3 py-2 text-sm" />
+            <button disabled={busy} className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">{busy ? "Buscando…" : "Buscar"}</button>
+            {place && <button type="button" onClick={() => { setPlace(null); setQ(""); }} className="rounded-md border border-input px-4 py-2 text-sm">Usar GPS</button>}
+          </form>
+          {searchErr && <div className="text-sm text-destructive">{searchErr}</div>}
+        </div>
         <div className={`hud-card ${({success:"border-success",warning:"border-warning",destructive:"border-destructive"})[status]} flex flex-col md:flex-row md:items-center justify-between gap-2`}>
           <div>
             <div className="hud-label">Status de voo</div>
