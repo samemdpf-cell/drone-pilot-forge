@@ -4,3 +4,4 @@
 - [x] Add and verify a preflight checklist alongside relative humidity, wind gusts and visibility.
 - [ ] Add a location-linked restriction map with verified airspace sources and explicit coverage limits.
 - [ ] Store uploaded documents privately per signed-in account and make them available across devices.
+- [ ] Include expiry dates in document comparison and flag documents expiring within 30 days.
