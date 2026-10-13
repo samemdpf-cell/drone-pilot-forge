@@ -104,7 +104,7 @@ function Dashboard() {
     queryFn: async () => (await (await fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=us_aqi,pm2_5,pm10,ozone,carbon_monoxide`)).json()).current,
   });
   const clim = useQuery({
-    queryKey: ["clim", lat?.toFixed(2), lon?.toFixed(2)], enabled: !!lat, staleTime: Infinity,
+    queryKey: ["clim", lat, lon], enabled: !!lat, staleTime: Infinity,
     queryFn: async () => {
       const end = new Date(Date.now() - 7 * 864e5), start = new Date(end); start.setFullYear(end.getFullYear() - 5);
       const f = (x: Date) => x.toISOString().slice(0, 10);
