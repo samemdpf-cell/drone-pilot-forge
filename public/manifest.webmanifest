@@ -1,5 +1,5 @@
 {
-"name": "CHECKLIST PILOTOS PROFISSIONAL",
+  "name": "CHECKLIST PILOTOS PROFISSIONAL",
   "short_name": "CHECKLIST PP",
   "description": "App para pilotos de drone: clima, GPS, ventos, condição de voo e documentos",
   "start_url": "/",
