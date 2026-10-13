@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useHydrated } from "@tanstack/react-router";
 import logo from "@/assets/logo.jpeg.asset.json";
 import { Button } from "@/components/ui/button";
 
@@ -26,6 +26,7 @@ function isStandalone() {
 }
 
 export function Nav() {
+  const hydrated = useHydrated();
   const [installEvent, setInstallEvent] = useState<InstallPromptEvent | null>(null);
   const [iosHint, setIosHint] = useState(false);
 
@@ -38,7 +39,7 @@ export function Nav() {
     return () => window.removeEventListener("beforeinstallprompt", onPrompt);
   }, []);
 
-  const showInstall = !isStandalone() && (installEvent !== null || isIos());
+  const showInstall = hydrated && !isStandalone() && (installEvent !== null || isIos());
 
   const handleInstall = async () => {
     if (installEvent) {
