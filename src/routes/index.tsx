@@ -8,7 +8,8 @@ import { FlightChecklist } from "@/components/FlightChecklist";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "SkyPilot — Painel de voo para pilotos de drone" },
+      { title: "Checklist Pilotos Profissional — Painel de voo para pilotos de drone" },
+
       { name: "description", content: "Clima, ventos, rajadas, índice KP, GPS, satélites, aurora e nascer/pôr do sol para pilotos de drone." },
       { property: "og:title", content: "SkyPilot — Painel de voo" },
       { property: "og:description", content: "Condições de voo em tempo real para pilotos de drone." },
