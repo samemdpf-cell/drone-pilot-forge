@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Nav } from "@/components/Nav";
+import { DocumentReview } from "@/components/DocumentReview";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/documentos")({
   head: () => ({
@@ -45,20 +47,21 @@ function Docs() {
     <div className="min-h-screen">
       <Nav />
       <main className="mx-auto max-w-4xl px-4 py-6 space-y-4">
+        <DocumentReview docs={docs} />
         <div className="flex gap-2">
           {(["piloto", "drone"] as const).map((f) => (
-            <button key={f} onClick={() => setFolder(f)} className={`hud-card flex-1 text-left ${folder === f ? "border-primary" : ""}`}>
+            <Button variant="outline" key={f} onClick={() => setFolder(f)} className={`hud-card h-auto flex-1 flex-col items-start text-left ${folder === f ? "border-primary" : ""}`}>
               <div className="hud-label">Pasta</div>
               <div className="text-xl font-bold">{f === "piloto" ? "📁 Piloto" : "📁 Drone"}</div>
               <div className="text-xs text-muted-foreground">{docs.filter((d) => d.folder === f).length} documentos</div>
-            </button>
+            </Button>
           ))}
         </div>
 
         <div className="hud-card flex flex-col md:flex-row gap-3 md:items-end">
           <label className="flex-1">
             <div className="hud-label mb-1">Adicionar arquivo ({folder === "piloto" ? "licença, CHT, seguro…" : "SISANT, ANATEL, manual…"})</div>
-            <input type="file" accept="image/*,application/pdf" onChange={(e) => { onFile(e.target.files?.[0]); e.target.value = ""; }} className="text-sm file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-primary-foreground" />
+            <input type="file" accept="image/*,application/pdf" onChange={(e) => { onFile(e.target.files?.[0]); e.target.value = ""; }} className="w-full min-w-0 text-sm file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-primary-foreground" />
           </label>
           <label>
             <div className="hud-label mb-1">Validade (opcional)</div>
@@ -81,7 +84,7 @@ function Docs() {
                 </div>
                 <div className="flex gap-2 shrink-0">
                   <a href={d.data} download={d.name} target="_blank" rel="noreferrer" className="px-3 py-1.5 rounded-md bg-secondary text-sm">Abrir</a>
-                  <button onClick={() => save(docs.filter((x) => x.id !== d.id))} className="px-3 py-1.5 rounded-md text-destructive text-sm">Excluir</button>
+                  <Button variant="ghost" onClick={() => save(docs.filter((x) => x.id !== d.id))} className="text-destructive">Excluir</Button>
                 </div>
               </div>
             );
