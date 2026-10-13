@@ -2,6 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Nav } from "@/components/Nav";
+import { Button } from "@/components/ui/button";
+import { FlightChecklist } from "@/components/FlightChecklist";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -77,7 +79,8 @@ function Dashboard() {
     queryKey: ["rev", pos?.lat.toFixed(2), pos?.lon.toFixed(2)],
     enabled: !!pos && !place,
     queryFn: async () => {
-      const r = await (await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos!.lat}&lon=${pos!.lon}&zoom=10&accept-language=pt-BR`)).json();
+      if (!pos) return null;
+      const r = await (await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.lat}&lon=${pos.lon}&zoom=10&accept-language=pt-BR`)).json();
       const a = r.address ?? {};
       return [a.city ?? a.town ?? a.village ?? a.municipality, a.state].filter(Boolean).join(" - ") || null;
     },
@@ -162,26 +165,26 @@ function Dashboard() {
       <main className="mx-auto max-w-6xl px-4 py-6 space-y-4">
         <div className="hud-card space-y-2">
           <div className="hud-label">Local</div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <div className="text-xl font-bold text-primary">{locName ?? (err ? `GPS: ${err}` : "Obtendo posição…")}</div>
-            {locName && <span className={`rounded-full border px-2 py-0.5 text-xs font-medium ${isSearched ? "border-primary text-primary" : "border-success text-success"}`}>{isSearched ? "Local buscado" : "GPS do aparelho"}</span>}
+          <div className="grid min-w-0 gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+            <div className="min-w-0 break-words text-xl font-bold text-primary">{locName ?? (err ? `GPS: ${err}` : "Obtendo posição…")}</div>
+            {locName && <span className={`w-fit shrink-0 rounded-full border px-2 py-0.5 text-xs font-medium ${isSearched ? "border-primary text-primary" : "border-success text-success"}`}>{isSearched ? "Local buscado" : "GPS do aparelho"}</span>}
           </div>
           {locName && <div className="text-xs text-muted-foreground">Todos os dados abaixo se referem a este local.</div>}
-          <form onSubmit={onSearch} className="flex flex-wrap gap-2">
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Cidade ou CEP (ex: Campinas ou 01310-100)" className="flex-1 min-w-48 rounded-md border border-input bg-background px-3 py-2 text-sm" />
-            <button disabled={busy} className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">{busy ? "Buscando…" : "Buscar"}</button>
-            {place && <button type="button" onClick={() => { setPlace(null); setQ(""); }} className="rounded-md border border-input px-4 py-2 text-sm">Usar GPS</button>}
+          <form onSubmit={onSearch} className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 sm:flex">
+            <input aria-label="Cidade ou CEP" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Cidade ou CEP" className="h-11 min-w-0 flex-1 rounded-md border border-input bg-background px-3 py-2 text-base" />
+            <Button type="submit" disabled={busy} className="h-11">{busy ? "Buscando…" : "Buscar"}</Button>
+            {place && <Button variant="outline" type="button" onClick={() => { setPlace(null); setQ(""); }} className="col-span-2 h-11">Usar GPS</Button>}
           </form>
           {searchErr && <div className="text-sm text-destructive">{searchErr}</div>}
         </div>
         <div className={`hud-card ${({success:"border-success",warning:"border-warning",destructive:"border-destructive"})[status]} flex flex-col md:flex-row md:items-center justify-between gap-2`}>
           <div>
             <div className="hud-label">Condição de voo</div>
-            <div className={`text-3xl font-bold ${({success:"text-success",warning:"text-warning",destructive:"text-destructive"})[status]}`}>{statusText}</div>
+            <div className={`text-2xl sm:text-3xl font-bold ${({success:"text-success",warning:"text-warning",destructive:"text-destructive"})[status]}`}>{statusText}</div>
             {issues.length > 0 && <div className="text-sm text-muted-foreground">{issues.join(" · ")}</div>}
             {issues.length === 0 && c && <div className="text-sm text-muted-foreground">Todos os parâmetros dentro do limite</div>}
           </div>
-          <div className="font-mono text-sm text-muted-foreground">{locName ? `Exibindo: ${locName}` : err ? `GPS: ${err}` : "Obtendo posição…"}</div>
+          <div className="min-w-0 break-words font-mono text-sm text-muted-foreground">{locName ? `Exibindo: ${locName}` : err ? `GPS: ${err}` : "Obtendo posição…"}</div>
         </div>
 
         <h2 className="hud-label pt-2">Clima</h2>
@@ -201,6 +204,7 @@ function Dashboard() {
           </div>
         </div>
 
+        <FlightChecklist location={locName} />
         <h2 className="hud-label pt-2">GPS & clima espacial</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <div className="hud-card">
@@ -307,9 +311,9 @@ function Dashboard() {
 
 function Stat({ label, v, u, sub, warn }: { label: string; v?: number | string | undefined; u: string; sub?: string | undefined; warn?: boolean | undefined }) {
   return (
-    <div className={`hud-card ${warn ? "border-warning" : ""}`}>
+    <div className={`hud-card min-w-0 ${warn ? "border-warning" : ""}`}>
       <div className="hud-label">{label}</div>
-      <div className={`font-mono text-3xl font-bold mt-1 ${warn ? "text-warning" : ""}`}>{v ?? "--"}<span className="text-sm text-muted-foreground ml-1">{u}</span></div>
+      <div className={`flex flex-wrap items-baseline gap-x-1 font-mono ${label === "Latitude" || label === "Longitude" ? "text-xl" : "text-2xl"} sm:text-3xl font-bold mt-1 ${warn ? "text-warning" : ""}`}><span>{v ?? "--"}</span><span className="text-xs sm:text-sm text-muted-foreground">{u}</span></div>
       {sub && <div className="text-xs text-muted-foreground">{sub}</div>}
     </div>
   );

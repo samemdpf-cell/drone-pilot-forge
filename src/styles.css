@@ -74,10 +74,14 @@
 }
 
 @utility hud-card {
+  min-width: 0;
   background: color-mix(in oklch, var(--card) 85%, transparent);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 1rem;
+  padding: 0.75rem;
+  @media (min-width: 640px) {
+    padding: 1rem;
+  }
   backdrop-filter: blur(6px);
 }
 @utility hud-label {
