@@ -57,7 +57,7 @@ export function Nav() {
       <div className="mx-auto max-w-6xl flex items-center justify-between px-4 py-3">
         <Link to="/" className="flex items-center gap-3 font-mono font-bold text-primary tracking-widest">
           <img src={logo.url} alt="Logomarca" className="h-10 w-auto rounded" />
-          SKYPILOT
+          <span className="hidden min-[420px]:inline">SKYPILOT</span>
         </Link>
         <div className="flex items-center gap-2">
           <nav className="flex gap-1">
