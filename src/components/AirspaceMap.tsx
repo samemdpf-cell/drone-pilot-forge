@@ -11,6 +11,7 @@ export function AirspaceMap({ location, name }: { location: Location | null; nam
   const marker = useRef<google.maps.Marker | null>(null);
   const [state, setState] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
   const [error, setError] = useState('');
+  const [areas, setAreas] = useState<'loading' | 'ready' | 'error'>('loading');
   const lat = location?.lat;
   const lon = location?.lon;
 
@@ -29,6 +30,27 @@ export function AirspaceMap({ location, name }: { location: Location | null; nam
           gestureHandling: 'cooperative',
         });
         marker.current = new maps.Marker({ map: map.current, position, title: 'Local do voo' });
+        const activeMap = map.current;
+        const colors = getComputedStyle(document.documentElement);
+        const palette: Record<string, string> = { P: colors.getPropertyValue('--airspace-prohibited').trim(), R: colors.getPropertyValue('--airspace-restricted').trim(), D: colors.getPropertyValue('--airspace-danger').trim() };
+        activeMap.data.setStyle((feature) => ({ fillColor: palette[String(feature.getProperty('tipo'))], strokeColor: palette[String(feature.getProperty('tipo'))], fillOpacity: 0.22, strokeWeight: 2 }));
+        const info = new maps.InfoWindow();
+        activeMap.data.addListener('click', (event: google.maps.Data.MouseEvent) => {
+          const content = document.createElement('div');
+          content.className = 'airspace-info';
+          const labels: Record<string, string> = { P: 'Proibida', R: 'Restrita', D: 'Perigosa' };
+          content.textContent = `${event.feature.getProperty('id')} — ${event.feature.getProperty('nome')} · Área ${labels[String(event.feature.getProperty('tipo'))] ?? ''} · Limite inferior: ${event.feature.getProperty('lowerlimit')} ${event.feature.getProperty('uom_llimit')} · Limite superior: ${event.feature.getProperty('upperlimit')} ${event.feature.getProperty('uom_ulimit')}. Confira a publicação vigente no DECEA.`;
+          info.setContent(content);
+          info.setPosition(event.latLng);
+          info.open(activeMap);
+        });
+        void fetch('/data/decea-airspace.geojson').then(async (response) => {
+          if (!response.ok) throw new Error('Áreas indisponíveis');
+          const data: unknown = await response.json();
+          if (map.current !== activeMap) return;
+          activeMap.data.addGeoJson(data as object);
+          setAreas('ready');
+        }).catch(() => { if (map.current === activeMap) setAreas('error'); });
       } else {
         map.current.setCenter(position);
         marker.current?.setPosition(position);
@@ -61,9 +83,14 @@ export function AirspaceMap({ location, name }: { location: Location | null; nam
         <div ref={container} className="h-full w-full" aria-label="Mapa do local de voo" />
         {state !== 'ready' && <div role="status" className="absolute inset-0 flex items-center justify-center px-6 text-center text-sm text-muted-foreground">{!location ? 'Selecione uma cidade, CEP ou permita o GPS para localizar o voo.' : state === 'error' ? error : 'Carregando mapa…'}</div>}
       </div>
+      <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs" aria-label="Legenda de restrições">
+        <span className="flex items-center gap-2"><span className="size-3 bg-destructive" />Proibida (P)</span>
+        <span className="flex items-center gap-2"><span className="size-3 bg-warning" />Restrita (R)</span>
+        <span className="flex items-center gap-2"><span className="size-3 bg-accent" />Perigosa (D)</span>
+      </div>
       <div className="flex items-start gap-2 border-l-2 border-warning pl-3 text-sm">
         <ShieldAlert className="mt-0.5 size-5 shrink-0 text-warning" />
-        <div><p className="font-semibold text-warning">Restrições oficiais ainda não carregadas</p><p className="text-muted-foreground">Este mapa identifica o local, mas não indica autorização de voo. Confira áreas restritas, aeródromos, helipontos e NOTAM no DECEA antes de decolar.</p></div>
+        <div><p className="font-semibold text-warning">{areas === 'ready' ? 'Áreas DECEA · consulta informativa' : areas === 'error' ? 'Não foi possível carregar as áreas oficiais' : 'Aguardando carregamento das áreas oficiais'}</p><p className="text-muted-foreground">Fonte: GeoAISWEB / ICA / DECEA, obtida em 13/10/2026. Não inclui todas as zonas para drones, CTR/TMA ou restrições temporárias de NOTAM. Ausência de área colorida não significa voo autorizado; confirme no SARPAS e AISWEB.</p></div>
       </div>
       <div className="flex flex-wrap gap-2">
         <Button asChild><a href="https://sarpas.decea.mil.br" target="_blank" rel="noreferrer">SARPAS / restrições<ExternalLink /></a></Button>
