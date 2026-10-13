@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { expiryStatus, localToday } from './document-expiry';
 
-export const extractionSchema = z.object({ pilotName: z.string().nullable(), registrations: z.array(z.object({ type: z.string(), value: z.string(), subject: z.enum(["piloto", "drone", "desconhecido"]) })), expiryDate: z.string().nullable().optional(), note: z.string().nullable() });
+export const extractionSchema = z.object({ pilotName: z.string().nullable(), registrations: z.array(z.object({ type: z.string(), value: z.string(), subject: z.enum(["piloto", "drone", "desconhecido"]) })), expiryDate: z.string().nullable(), note: z.string().nullable() });
 export type Extraction = z.infer<typeof extractionSchema>;
 export type ReviewedDocument = { id: string; name: string; expires?: string | null; extraction: Extraction };
 export type ReviewAlert = { id: string; text: string; documents: string[] };
