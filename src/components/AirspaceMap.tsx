@@ -33,7 +33,7 @@ export function AirspaceMap({ location, name }: { location: Location | null; nam
         const activeMap = map.current;
         const colors = getComputedStyle(document.documentElement);
         const palette: Record<string, string> = { P: colors.getPropertyValue('--airspace-prohibited').trim(), R: colors.getPropertyValue('--airspace-restricted').trim(), D: colors.getPropertyValue('--airspace-danger').trim() };
-        activeMap.data.setStyle((feature) => ({ fillColor: palette[String(feature.getProperty('tipo'))], strokeColor: palette[String(feature.getProperty('tipo'))], fillOpacity: 0.22, strokeWeight: 2 }));
+        activeMap.data.setStyle((feature) => ({ fillColor: palette[String(feature.getProperty('tipo'))] ?? palette['R'] ?? '', strokeColor: palette[String(feature.getProperty('tipo'))] ?? palette['R'] ?? '', fillOpacity: 0.22, strokeWeight: 2 }));
         const info = new maps.InfoWindow();
         activeMap.data.addListener('click', (event: google.maps.Data.MouseEvent) => {
           const content = document.createElement('div');

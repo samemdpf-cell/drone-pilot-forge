@@ -36,7 +36,7 @@ export function DocumentReview({ docs, loadData, onExpiry }: { docs: InputDoc[];
         setMessage(`Lendo ${i + 1}/${docs.length}: ${doc.name}`);
         const result = await analyze({ data: { id: doc.id, name: doc.name, type: doc.type, data: await loadData(doc.id) } });
         if (!result.ok) { setMessage(`${doc.name}: ${result.error} Nenhuma comparação concluída.`); return; }
-        rows.push({ id: doc.id, name: doc.name, expires: doc.expires, extraction: result.extraction });
+        rows.push({ id: doc.id, name: doc.name, expires: doc.expires ?? null, extraction: result.extraction });
       }
       setReviewed(rows); setMessage(`${rows.length} documentos comparados nas pastas Piloto e Drone.`);
     } catch { setMessage("A comparação foi interrompida. Seus documentos não foram alterados."); }

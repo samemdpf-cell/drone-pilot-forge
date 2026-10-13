@@ -10,7 +10,7 @@ export async function listAccountDocuments(userId: string) {
   return data;
 }
 
-export async function uploadAccountDocument(userId: string, file: Blob, metadata: { name: string; folder: 'piloto' | 'drone'; expires?: string; id?: string }) {
+export async function uploadAccountDocument(userId: string, file: Blob, metadata: { name: string; folder: 'piloto' | 'drone'; expires?: string | undefined; id?: string }) {
   const id = metadata.id ?? crypto.randomUUID();
   const path = `${userId}/${id}`;
   const { data: existing, error: readError } = await supabase.from('pilot_documents').select('id').eq('id', id).eq('user_id', userId).maybeSingle();
