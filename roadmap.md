@@ -2,6 +2,6 @@
 - [x] Implement pilot-name and registration comparison through AI Gateway with manual-confirmation alerts in Documents; extraction verified with a fictitious image and comparison rules tested.
 - [x] Verify comparison end-to-end with an authenticated account and uploaded documents: signed up a test account, uploaded two documents and confirmed both divergence alerts in the browser.
 - [x] Add and verify a preflight checklist alongside relative humidity, wind gusts and visibility.
-- [ ] Add a location-linked restriction map with verified airspace sources and explicit coverage limits.
-- [ ] Store uploaded documents privately per signed-in account and make them available across devices.
-- [ ] Include expiry dates in document comparison and flag documents expiring within 30 days.
+- [x] Add a location-linked restriction map using 521 verified DECEA features and explicit coverage limits; live Google Maps rendering requires user verification on the published authorized origin.
+- [x] Store documents privately per signed-in account; verified upload, fresh-device readback, download, sign-out and deletion with fictitious files.
+- [x] Include expiry dates in comparison and flag expiry within 30 days; 11 tests passed and AI extraction plus manual expiry saving verified.
