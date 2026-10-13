@@ -1,0 +1,2 @@
+- [ ] Review mobile header, weather and GPS cards; verify layout and installation controls.
+- [ ] Compare pilot names and registration numbers across uploaded documents using AI Gateway, with manual-confirmation alerts in Documents.
