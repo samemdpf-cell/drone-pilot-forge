@@ -87,10 +87,10 @@ function Dashboard() {
     <div className="min-h-screen">
       <Nav />
       <main className="mx-auto max-w-6xl px-4 py-6 space-y-4">
-        <div className={`hud-card border-${status} flex flex-col md:flex-row md:items-center justify-between gap-2`}>
+        <div className={`hud-card ${({success:"border-success",warning:"border-warning",destructive:"border-destructive"})[status]} flex flex-col md:flex-row md:items-center justify-between gap-2`}>
           <div>
             <div className="hud-label">Status de voo</div>
-            <div className={`text-3xl font-bold text-${status}`}>{statusText}</div>
+            <div className={`text-3xl font-bold ${({success:"text-success",warning:"text-warning",destructive:"text-destructive"})[status]}`}>{statusText}</div>
             {issues.length > 0 && <div className="text-sm text-muted-foreground">{issues.join(" · ")}</div>}
           </div>
           <div className="font-mono text-sm text-muted-foreground">{err ? `GPS: ${err}` : pos ? `${pos.lat.toFixed(5)}, ${pos.lon.toFixed(5)}` : "Obtendo posição…"}</div>
