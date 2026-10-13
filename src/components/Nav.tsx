@@ -59,7 +59,7 @@ export function Nav() {
       <div className="mx-auto grid max-w-6xl grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 px-4 py-2 sm:flex sm:justify-between sm:py-3">
         <Link to="/" className="flex min-w-0 items-center gap-2 font-mono font-bold text-primary">
           <img src={logo.url} alt="Anselmo Imagens Aéreas" className="h-10 w-auto shrink-0 rounded" />
-          <span className="truncate text-sm sm:text-base">SKYPILOT</span>
+          <span className="truncate text-sm sm:text-base">CHECKLIST PILOTOS PROFISSIONAL</span>
         </Link>
           <nav aria-label="Navegação principal" className="col-span-2 row-start-2 grid grid-cols-2 gap-1 sm:ml-auto sm:flex">
             <Link to="/" className={cls} activeProps={active} activeOptions={{ exact: true }}>Painel</Link>

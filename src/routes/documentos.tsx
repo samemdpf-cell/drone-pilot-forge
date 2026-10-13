@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/documentos")({
   head: () => ({
     meta: [
-      { title: "Documentos — SkyPilot" },
+      { title: "Documentos — Checklist Pilotos Profissional" },
       { name: "description", content: "Pasta de documentos do piloto e do drone: licenças, seguro, registro e manuais." },
       { property: "og:title", content: "Documentos do piloto e do drone" },
       { property: "og:description", content: "Guarde licenças, seguro e registros do drone." },

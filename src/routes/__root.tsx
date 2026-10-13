@@ -78,7 +78,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
-      { title: "SkyPilot" },
+      { title: "Checklist Pilotos Profissional" },
+
       { name: "description", content: "App para pilotos de drone" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -86,7 +87,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "theme-color", content: "#0F172A" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
-      { name: "apple-mobile-web-app-title", content: "SkyPilot" },
+      { name: "apple-mobile-web-app-title", content: "CHECKLIST PP" },
     ],
     links: [
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
